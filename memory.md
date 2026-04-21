@@ -1,0 +1,1 @@
+docker exec -it mariadb mysql -u root -p
