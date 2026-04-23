@@ -30,7 +30,7 @@ services:
     container_name: nginx
     restart: always
     ports:
-    - "8443:443"
+    - "443:443"
     volumes:
       - wordpress_data:/var/www/html
     depends_on:
@@ -38,5 +38,12 @@ services:
 
 volumes:
   mariadb_data:
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/zcadinot/data/mariadb
   wordpress_data:
-  
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/zcadinot/data/wordpress
