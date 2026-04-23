@@ -41,9 +41,9 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/zcadinot/data/mariadb
+      device: /home/zibgame/data/mariadb
   wordpress_data:
     driver_opts:
       type: none
       o: bind
-      device: /home/zcadinot/data/wordpress
+      device: /home/zibgame/data/wordpress
