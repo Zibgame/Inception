@@ -41,4 +41,4 @@ if [ ! -f /var/www/html/.installed ]; then
     touch /var/www/html/.installed
 fi
 
-exec php-fpm7.4 -F
+exec php-fpm8.2 -F
