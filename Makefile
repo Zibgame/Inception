@@ -1,10 +1,23 @@
+NAME = inception
+
+COMPOSE = docker compose -f srcs/docker-compose.yml
+
 all:
-	docker compose -f srcs/docker-compose.yml up --build
+	mkdir -p /home/zcadinot/data/mariadb
+	mkdir -p /home/zcadinot/data/wordpress
+	$(COMPOSE) up --build -d
 
 down:
-	docker compose -f srcs/docker-compose.yml down
-
-re: down all
+	$(COMPOSE) down
 
 clean:
+	$(COMPOSE) down -v
 	docker system prune -af
+
+fclean: clean
+	sudo rm -rf /home/zcadinot/data/mariadb
+	sudo rm -rf /home/zcadinot/data/wordpress
+
+re: fclean all
+
+.PHONY: all down clean fclean re
