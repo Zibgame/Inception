@@ -1,8 +1,12 @@
+version: "3.8"
+
 services:
   mariadb:
-    env_file: ".env"
-    build: ./requirements/mariadb
     container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+    env_file:
+      - .env
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -15,40 +19,61 @@ services:
       - inception
 
   wordpress:
-    env_file: ".env"
-    build: ./requirements/wordpress
     container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+    env_file:
+      - .env
     restart: always
-    environment:
-      WORDPRESS_DB_HOST: mariadb:3306
-      WORDPRESS_DB_USER: ${MYSQL_USER}
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
-      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
     depends_on:
       - mariadb
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_USER: ${WP_USER}
+      WP_USER_PASSWORD: ${WP_USER_PASSWORD}
+      WP_USER_EMAIL: ${WP_USER_EMAIL}
     volumes:
       - wordpress_data:/var/www/html
     networks:
       - inception
 
   nginx:
-    env_file: ".env"
-    build: ./requirements/nginx
     container_name: nginx
+    build:
+      context: ./requirements/nginx
+    env_file:
+      - .env
     restart: always
+    depends_on:
+      - wordpress
     ports:
       - "443:443"
     volumes:
       - wordpress_data:/var/www/html
-    depends_on:
-      - wordpress
     networks:
       - inception
 
 volumes:
   mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/zcadinot/data/mariadb
 
   wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/zcadinot/data/wordpress
 
 networks:
   inception:
