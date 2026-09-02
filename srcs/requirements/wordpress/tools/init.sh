@@ -24,4 +24,21 @@ sed -i "s/username_here/$MYSQL_USER/" wp-config.php
 sed -i "s/password_here/$MYSQL_PASSWORD/" wp-config.php
 sed -i "s/localhost/mariadb/" wp-config.php
 
+if [ ! -f /var/www/html/.installed ]; then
+    wp core install \
+        --url="https://${DOMAIN_NAME}" \
+        --title="Inception" \
+        --admin_user="${WP_ADMIN_USER}" \
+        --admin_password="${WP_ADMIN_PASSWORD}" \
+        --admin_email="${WP_ADMIN_EMAIL}" \
+        --allow-root
+
+    wp user create ${WP_USER} ${WP_USER_EMAIL} \
+        --role=author \
+        --user_pass=${WP_USER_PASSWORD} \
+        --allow-root
+
+    touch /var/www/html/.installed
+fi
+
 exec php-fpm7.4 -F
