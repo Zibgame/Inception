@@ -1,42 +1,21 @@
 #!/bin/bash
-
 set -e
 
-echo "Waiting for MariaDB..."
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "First boot: initializing MariaDB..."
 
-# Démarrage temporaire du serveur MariaDB en arrière-plan pour init
-mysqld_safe --datadir=/var/lib/mysql --user=mysql &
-pid="$!"
+    mariadb-install-db --user=mysql --datadir=/var/lib/mysql --skip-test-db
 
-# Attente que MariaDB soit prête
-until mysqladmin ping --silent; do
-    echo "MariaDB not ready yet..."
-    sleep 2
-done
-
-echo "MariaDB is ready!"
-
-# Création base + user si pas déjà fait
-mysql -u root << EOF
-CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
-
+    # Ecrire le SQL dans un fichier (pas de background, --init-file le lit au démarrage)
+    cat > /tmp/init.sql << SQLEOF
+CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-
-GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
-
+GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 FLUSH PRIVILEGES;
-EOF
+SQLEOF
 
-echo "Database and user created"
+    echo "Starting mysqld with init file..."
+    exec mysqld --user=mysql --datadir=/var/lib/mysql --init-file=/tmp/init.sql --console
+fi
 
-# Stop du mysqld_safe temporaire
-mysqladmin -u root -p${MYSQL_ROOT_PASSWORD} shutdown
-
-wait "$pid"
-
-echo "Starting MariaDB in foreground..."
-
-# IMPORTANT : process principal Docker (foreground)
-exec mysqld_safe --datadir=/var/lib/mysql --user=mysql --console
+exec mysqld --user=mysql --datadir=/var/lib/mysql --console

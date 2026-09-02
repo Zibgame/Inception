@@ -1,28 +1,22 @@
 #!/bin/bash
 
-export MYSQL_USER=$WORDPRESS_DB_USER
-export MYSQL_PASSWORD=$WORDPRESS_DB_PASSWORD
-export MYSQL_DATABASE=$WORDPRESS_DB_NAME
-
 echo "Waiting for MariaDB..."
-
-until mysql -h mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "USE $MYSQL_DATABASE;" > /dev/null 2>&1
-do
-	sleep 2
+until mysql -h mariadb -u"${WORDPRESS_DB_USER}" -p"${WORDPRESS_DB_PASSWORD}" \
+      -e "USE ${WORDPRESS_DB_NAME};" > /dev/null 2>&1; do
+    sleep 2
 done
-
-echo "MariaDB ready"
+echo "MariaDB ready."
 
 cd /var/www/html
 
 if [ ! -f wp-config.php ]; then
-	cp wp-config-sample.php wp-config.php
+    wp config create \
+        --dbname="${WORDPRESS_DB_NAME}" \
+        --dbuser="${WORDPRESS_DB_USER}" \
+        --dbpass="${WORDPRESS_DB_PASSWORD}" \
+        --dbhost="mariadb" \
+        --allow-root
 fi
-
-sed -i "s/database_name_here/$MYSQL_DATABASE/" wp-config.php
-sed -i "s/username_here/$MYSQL_USER/" wp-config.php
-sed -i "s/password_here/$MYSQL_PASSWORD/" wp-config.php
-sed -i "s/localhost/mariadb/" wp-config.php
 
 if [ ! -f /var/www/html/.installed ]; then
     wp core install \
@@ -33,9 +27,9 @@ if [ ! -f /var/www/html/.installed ]; then
         --admin_email="${WP_ADMIN_EMAIL}" \
         --allow-root
 
-    wp user create ${WP_USER} ${WP_USER_EMAIL} \
+    wp user create "${WP_USER}" "${WP_USER_EMAIL}" \
         --role=author \
-        --user_pass=${WP_USER_PASSWORD} \
+        --user_pass="${WP_USER_PASSWORD}" \
         --allow-root
 
     touch /var/www/html/.installed
