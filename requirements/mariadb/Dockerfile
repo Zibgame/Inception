@@ -13,4 +13,4 @@ COPY ./tools/init.sh /init.sh
 RUN chmod +x /init.sh
 
 # commande qui se lance au demarage
-CMD ["/init.sh"] 
+CMD ["/init.sh"]
